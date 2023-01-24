@@ -1,4 +1,4 @@
-import numpy
-print('hi there')
-# this is just a comment
-# commit this right now
+import IPython.nbformat.current as nbf
+import Ipython
+nb = nbf.read(open('test.py', 'r'), 'py')
+nbf.write(nb, open('test.ipynb', 'w'), 'ipynb')

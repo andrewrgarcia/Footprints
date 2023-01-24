@@ -1,8 +1,9 @@
-# +
+#%%
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 import polars as pl
+from numba import njit
 
 np.set_printoptions(suppress=True, formatter={'float_kind': '{:.2f}'.format})
 pd.set_option('display.float_format', '{:.2f}'.format)
@@ -22,8 +23,33 @@ def price_calc(price_buy_vol, price_sell_vol, price_buy_count, price_sell_count)
 	price_trade_count = price_buy_count + price_sell_count
 	return price_delta, price_volume, price_delta_percent, price_trade_count
 
+i = 0
+real_start = 0
+real_end = 0
+candle_count = open_row = 0
+price_sell_vol = 0
+price_sell_count = 0
+candle_volume = 0
+price_buy_vol = 0
+price_buy_count = 0
+imb_candles = []
+temp = np.empty((0, 3))
+
+data.sort_values(by=['timestamp'], ignore_index=True, inplace=True)
+data.rename(columns={'size': 'btc_size', 'foreignNotional': 'usd_size'}, inplace=True)
+# data.timestamp = pd.to_datetime(data.timestamp, unit="s")
+# data = data.append(pd.Series(), ignore_index=True)
+data_len = data.shape[0]
+
+timestamp = data.timestamp.values
+side = np.where(data.side == 'Buy', 1, 0)
+price = data.price.values
+usd_size = data.usd_size.values
+btc_size = data.btc_size.values
+
 
 # +
+@njit
 def Convert_tick_data_volume_candles(data: pd.DataFrame, user_defined_volume: str):
 	"""
     This function accepts a dataframe of raw tick data for one day,
@@ -38,29 +64,6 @@ def Convert_tick_data_volume_candles(data: pd.DataFrame, user_defined_volume: st
     =======
     output_df       : pd.DataFrame
     """
-	i = 0
-	real_start = 0
-	real_end = 0
-	candle_count = open_row = 0
-	price_sell_vol = 0
-	price_sell_count = 0
-	candle_volume = 0
-	price_buy_vol = 0
-	price_buy_count = 0
-	imb_candles = []
-	temp = np.empty((0, 3))
-	
-	data.sort_values(by=['timestamp'], ignore_index=True, inplace=True)
-	data.rename(columns={'size': 'btc_size', 'foreignNotional': 'usd_size'}, inplace=True)
-	# data.timestamp = pd.to_datetime(data.timestamp, unit="s")
-	# data = data.append(pd.Series(), ignore_index=True)
-	data_len = data.shape[0]
-	
-	timestamp = data.timestamp.values
-	side = np.where(data.side == 'Buy', 1, 0)
-	price = data.price.values
-	usd_size = data.usd_size.values
-	btc_size = data.btc_size.values
 	
 	vol_size = user_defined_volume.split('-')
 	if vol_size[1] == 'm':
@@ -193,8 +196,18 @@ def Convert_tick_data_volume_candles(data: pd.DataFrame, user_defined_volume: st
 		open_row = i
 		real_start = real_end
 	
-	df_test = pd.DataFrame(imb_candles, columns=req_cols)
-	return df_test
+	return 1
 
-
-print(Convert_tick_data_volume_candles(data, '100-m').head(50))
+#%%
+cans = Convert_tick_data_volume_candles(data, '50-m')
+# %%
+testcans = cans.copy()
+# %%
+testcans['open time'] = pd.to_datetime(testcans['open time'], unit='s')
+testcans['close time'] = pd.to_datetime(testcans['close time'], unit='s')
+testcans
+# %%
+testcans['duration'] = testcans['duration']/60
+testcans
+# %%
+testcans.to_csv('testcans')
