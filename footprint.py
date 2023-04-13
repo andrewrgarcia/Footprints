@@ -16,6 +16,61 @@ def user_vol_size(split_me):
 
 class Printer:
     def __init__(self):
+        '''
+        A class that defines methods for updating and aggregating data for footprint candlestick chart generation.
+
+        Attributes
+        -----------
+        ss : int
+            The row index for a particular candlestick chart.
+        num_row : int
+            The total number of rows in a candlestick chart.
+        candle_open_time : int
+            The opening time for a particular candlestick.
+        candle_close_time : int
+            The closing time for a particular candlestick.
+        candle_duration : int
+            The duration of a particular candlestick.
+        candle_open : float
+            The opening price for a particular candlestick.
+        candle_high : float
+            The highest price for a particular candlestick.
+        candle_low : float
+            The lowest price for a particular candlestick.
+        candle_close : float
+            The closing price for a particular candlestick.
+        candle_volume : float
+            The total volume for a particular candlestick.
+        real_prices : float
+            The prices for a particular candlestick chart.
+        price_buy_vol : float
+            The total buy volume for a particular candlestick.
+        price_buy_count : int
+            The total buy count for a particular candlestick.
+        price_sell_vol : float
+            The total sell volume for a particular candlestick.
+        price_sell_count : int
+            The total sell count for a particular candlestick.
+        price_delta : float
+            The difference between buy and sell volume for a particular candlestick.
+        price_delta_percent : float
+            The percentage difference between buy and sell volume for a particular candlestick.
+        price_volume : float
+            The total volume for a particular candlestick.
+        price_trade_count : int
+            The total trade count for a particular candlestick.
+        candle_trade_count : int
+            The total trade count for a particular candlestick chart.
+        candle_sell_vol : float
+            The total sell volume for a particular candlestick chart.
+        candle_sell_count : int
+            The total sell count for a particular candlestick chart.
+        candle_buy_vol : float
+            The total buy volume for a particular candlestick chart.
+        candle_buy_count : int
+            The total buy count for a particular candlestick chart.
+
+        '''
         self.ss = 0
         self.num_row = 0
         
@@ -44,7 +99,7 @@ class Printer:
         self.candle_buy_count = 0
 
     def update_price_data(self):
-        # price_calc
+        '''A method that updates price data (Formerly known as `price_calc`)'''
         
         self.price_delta = self.price_buy_vol - self.price_sell_vol
         self.price_volume = self.price_buy_vol + self.price_sell_vol
@@ -57,10 +112,8 @@ class Printer:
 
         Parameters
         ------------------
-        candles: 
-            a numpy array representing the candles
-        **kwargs: 
-            keyword arguments representing the updated values for the keys in the features dictionary
+        candles: ndarray
+            A numpy array representing the candles
         '''        
         # Define a dictionary of features
         features={
@@ -95,35 +148,40 @@ class Printer:
 
         Parameters
         -------------------
-        candles : list 
-            A list of candlestick data.
+        candles: ndarray
+            A numpy array representing the candles
         grouped_by_uni_prices : ndarray
             Contains grouped prices.
         uni_sides_in_group_p : list  
             A list of unique sides in the grouped prices array.
         side : int
             The side direction. 0 represents 'bid' and 1 represents 'ask'. Defaults to 0.
-        """
-        self.price_buy_vol = 0
-        self.price_buy_count = 0
-        self.price_sell_count = 0
-        self.price_sell_vol = 0
-            
+        """          
+
         if side == 0:
-            side_index, opp_side_index  = 0, 1
-        else:
-            side_index, opp_side_index  = 1, 0 
+            # Sum up the amount of sells and sell volume
+            self.price_sell_vol = np.sum(grouped_by_uni_prices[grouped_by_uni_prices[:, 0] == uni_sides_in_group_p[0]][:, -1])
+            self.price_sell_count = (grouped_by_uni_prices[grouped_by_uni_prices[:, 0] == uni_sides_in_group_p[0]]).shape[0]
+            
+            try:
+                # If there are any buys , sum them, otherwise set buy info to 0
+                self.price_buy_vol = np.sum(grouped_by_uni_prices[grouped_by_uni_prices[:, 0] == uni_sides_in_group_p[1]][:, -1])
+                self.price_buy_count = (grouped_by_uni_prices[grouped_by_uni_prices[:, 0] == uni_sides_in_group_p[0]]).shape[1]
+            except:
+                self.price_buy_vol = 0
+                self.price_buy_count = 0
+        else: 
+            # Sum up the amount of buys and buy volume
+            self.price_buy_vol = np.sum(grouped_by_uni_prices[grouped_by_uni_prices[:, 0] == uni_sides_in_group_p[0]][:, -1])
+            self.price_buy_count = (grouped_by_uni_prices[grouped_by_uni_prices[:, 0] == uni_sides_in_group_p[0]]).shape[0]
 
-        try:
-            # Sum up the amount of sells / buys and sell / buy volume
-            self.price_sell_vol = np.sum(grouped_by_uni_prices[grouped_by_uni_prices[:, 0] == uni_sides_in_group_p[side_index]][:, -1])
-            self.price_sell_count = (grouped_by_uni_prices[grouped_by_uni_prices[:, 0] == uni_sides_in_group_p[0]]).shape[side_index]
-
-            # If there are any buys / sells , sum them, otherwise set buy / sell info to 0
-            self.price_buy_vol = np.sum(grouped_by_uni_prices[grouped_by_uni_prices[:, 0] == uni_sides_in_group_p[opp_side_index]][:, -1])
-            self.price_buy_count = (grouped_by_uni_prices[grouped_by_uni_prices[:, 0] == uni_sides_in_group_p[0]]).shape[opp_side_index]
-        except:
-            None
+            try:
+                # If there are any sells , sum them, otherwise set sell info to 0
+                self.price_sell_vol = np.sum(grouped_by_uni_prices[grouped_by_uni_prices[:, 0] == uni_sides_in_group_p[1]][:, -1])
+                self.price_sell_count = (grouped_by_uni_prices[grouped_by_uni_prices[:, 0] == uni_sides_in_group_p[0]]).shape[1]
+            except:
+                self.price_sell_count = 0
+                self.price_sell_vol = 0
 
         # Update price data
         self.update_price_data()
@@ -143,7 +201,6 @@ class Printer:
         self.num_row += 1
 
         return candles
-
 
 
     def Convert_tick_data_volume_candles(self, data, vol_size):
@@ -223,84 +280,12 @@ class Printer:
 
                         # Check if side is a sell
                         if uni_sides_in_group_p[0] == 0:
-                            # imb_candles = self.aggregate_volumes(imb_candles, grouped_by_uni_prices, uni_sides_in_group_p, side=0)
-
-                            # sum up the amoung of sells and sell volume
-                            self.price_sell_vol = np.sum(
-                                grouped_by_uni_prices[grouped_by_uni_prices[:, 0] == uni_sides_in_group_p[0]][:, -1])
-                            self.price_sell_count = (
-                                grouped_by_uni_prices[grouped_by_uni_prices[:, 0] == uni_sides_in_group_p[0]]).shape[0]
-                            try:
-                                # checks if there are any buys ... if so sum them ... if set buy info to 0
-                                # var = uni_sides_in_group_p[1]
-                                self.price_buy_vol = np.sum(
-                                    grouped_by_uni_prices[grouped_by_uni_prices[:, 0] == uni_sides_in_group_p[1]][:, -1])
-                                self.price_buy_count = (grouped_by_uni_prices[
-                                    grouped_by_uni_prices[:, 0] == uni_sides_in_group_p[0]]
-                                ).shape[1]
-                            except:
-                                self.price_buy_vol = 0
-                                self.price_buy_count = 0
-
-                            # Update price data
-                            self.update_price_data()
-
-                            # Aggregate volumes and counts
-                            self.candle_trade_count += self.price_trade_count
-                            self.candle_sell_vol += self.price_sell_vol
-                            self.candle_sell_count += self.price_sell_count
-                            self.candle_buy_vol += self.price_buy_vol
-                            self.candle_buy_count += self.price_buy_count
-
-                            # Append to candlestick data
-                            imb_candles = self.append_to_candle(imb_candles)
-
-                            # Increment counters
-                            self.ss += 1
-                            self.num_row += 1
-
-                            # imb_candles = self.aggregate_volumes(imb_candles, grouped_by_uni_prices, uni_sides_in_group_p, side=0)
+                            imb_candles = self.aggregate_volumes(imb_candles, grouped_by_uni_prices, uni_sides_in_group_p, side=0)
                             break
 
                         else:
                             # First element is a buy
-                        
-                            # sum up all the buy volume and count
-                            price_buy_vol = np.sum(
-                                grouped_by_uni_prices[grouped_by_uni_prices[:, 0] == uni_sides_in_group_p[0]][:, -1])
-                            price_buy_count = (
-                                grouped_by_uni_prices[grouped_by_uni_prices[:, 0] ==
-                                                    uni_sides_in_group_p[0]]).shape[0]
-                            try:
-                                # checks 2nd element for any sells ... if so sum them ... if not pass
-                                var = uni_sides_in_group_p[1]
-                                price_sell_vol = np.sum(
-                                    grouped_by_uni_prices[grouped_by_uni_prices[:, 0] == uni_sides_in_group_p[1]][:, -1])
-                                price_sell_count = (grouped_by_uni_prices[
-                                    grouped_by_uni_prices[:, 0] == uni_sides_in_group_p[0]]
-                                ).shape[1]
-                            except:
-                                price_sell_count = 0
-                                price_sell_vol = 0
-
-                            # Update price data
-                            self.update_price_data()
-
-                            # Aggregate volumes and counts
-                            self.candle_trade_count += self.price_trade_count
-                            self.candle_sell_vol += self.price_sell_vol
-                            self.candle_sell_count += self.price_sell_count
-                            self.candle_buy_vol += self.price_buy_vol
-                            self.candle_buy_count += self.price_buy_count
-
-                            # Append to candlestick data
-                            imb_candles = self.append_to_candle(imb_candles)
-
-                            # Increment counters
-                            self.ss += 1
-                            self.num_row += 1
-
-                            # imb_candles = self.aggregate_volumes(imb_candles, grouped_by_uni_prices, uni_sides_in_group_p, side=0)
+                            imb_candles = self.aggregate_volumes(imb_candles, grouped_by_uni_prices, uni_sides_in_group_p, side=1)
                             break
 
                     else:
@@ -347,4 +332,3 @@ with timethis("without @njit"):
 
     handler = Printer()
     pd.DataFrame(handler.Convert_tick_data_volume_candles(data, user_vol_size('10-m')), columns=req_cols).dropna().to_csv('footprint_test_numpy.csv')
-# Convert_tick_data_volume_candles(user_vol_size('10-m'))
