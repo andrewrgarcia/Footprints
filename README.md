@@ -1,6 +1,7 @@
 # Footprints
 proof of concept for plotly and tick data
 
+[mplfinance Issue # 572 (enhancement)] (https://github.com/matplotlib/mplfinance/issues/572)
 
 #### No need to use numba
 
