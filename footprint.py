@@ -331,4 +331,4 @@ req_cols = ['open time', 'close time', 'duration', 'open', 'high', 'low', 'close
 with timethis("without @njit"):
 
     handler = Printer()
-    pd.DataFrame(handler.Convert_tick_data_volume_candles(data, user_vol_size('10-m')), columns=req_cols).dropna().to_csv('footprint_test_numpy.csv')
+    pd.DataFrame(handler.Convert_tick_data_volume_candles(data, user_vol_size('10-k')), columns=req_cols).dropna().to_csv('footprint_test.csv')
